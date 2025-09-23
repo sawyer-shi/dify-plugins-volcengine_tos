@@ -1,0 +1,17 @@
+identity:
+  author: "sawyer-shi"
+  name: "volcengine_tos"
+  label:
+    en_US: "volcengine_tos"
+    zh_Hans: "volcengine_tos"
+    pt_BR: "volcengine_tos"
+  description:
+    en_US: "Upload files to Volcengine TOS and return the file URL; Enter the URL of the Volcengine TOS file to return the file itself"
+    zh_Hans: "Upload files to Volcengine TOS and return the file URL; Enter the URL of the Volcengine TOS file to return the file itself"
+    pt_BR: "Upload files to Volcengine TOS and return the file URL; Enter the URL of the Volcengine TOS file to return the file itself"
+  icon: "icon.svg"
+tools:
+  - tools/volcengine_tos.yaml
+extra:
+  python:
+    source: provider/volcengine_tos.py
