@@ -80,7 +80,7 @@ Dedicated tool for uploading files to Volcengine TOS.
     - `no_subdirectory`: Store directly in specified directory
     - `yyyy_mm_dd_hierarchy`: Store in date-based hierarchical structure
     - `yyyy_mm_dd_combined`: Store in combined date directory
-  - `filename`: Optional custom filename for OSS storage
+  - `filename`: Optional custom filename for TOS storage
   - `filename_mode`: Optional filename composition mode (default: `filename`)
     - `filename`: Use original filename
     - `filename_timestamp`: Use original filename plus timestamp
@@ -89,7 +89,7 @@ Dedicated tool for uploading files to Volcengine TOS.
 
 Dedicated tool for retrieving files from Volcengine TOS using URLs.
 - **Parameters**:
-  - `file_url`: The URL of the file in Alibaba Cloud OSS
+  - `file_url`: The URL of the file in Volcengine TOS
 
 ### Examples
 
@@ -126,7 +126,7 @@ Dedicated tool for retrieving files from Volcengine TOS using URLs.
 
 ## 中文
 
-一个功能强大的Dify插件，提供与阿里云对象存储服务（OSS）的无缝集成。支持将文件直接上传到阿里云OSS，并使用URL高效检索文件，提供丰富的配置选项。
+一个功能强大的Dify插件，提供与火山引擎对象存储服务（TOS）的无缝集成。支持将文件直接上传到火山引擎TOS，并使用URL高效检索文件，提供丰富的配置选项。
 
 ### 版本信息
 
@@ -140,21 +140,21 @@ Dedicated tool for retrieving files from Volcengine TOS using URLs.
 
 ### 核心特性
 
-#### 文件上传至OSS
-- **直接文件上传**: 将任何类型的文件直接上传到阿里云OSS
+#### 文件上传至TOS
+- **直接文件上传**: 将任何类型的文件直接上传到火山引擎TOS
 - **灵活的目录结构**: 多种存储目录组织选项
   - 扁平结构 (no_subdirectory)
   - 分层日期结构 (yyyy_mm_dd_hierarchy)
   - 合并日期结构 (yyyy_mm_dd_combined)
-- **文件名自定义**: 控制文件在OSS中的存储名称
+- **文件名自定义**: 控制文件在TOS中的存储名称
   - 使用原始文件名
   - 在原始文件名后附加时间戳
 - **源文件追踪**: 自动捕获并返回原始文件名
 - **智能扩展名检测**: 基于内容类型自动确定文件扩展名
 
 #### 通过URL获取文件
-- **直接内容访问**: 使用OSS URL直接检索文件内容
-- **跨区域支持**: 适用于全球所有阿里云OSS区域
+- **直接内容访问**: 使用TOS URL直接检索文件内容
+- **跨区域支持**: 适用于全球所有火山引擎TOS区域
 
 ### 技术优势
 
@@ -168,7 +168,7 @@ Dedicated tool for retrieving files from Volcengine TOS using URLs.
 ### 要求
 
 - Python 3.12
-- 具有有效AccessKey凭证的阿里云OSS账户
+- 具有有效AccessKey凭证的火山引擎TOS账户
 - Dify平台访问权限
 - 所需的Python包（通过requirements.txt安装）
 
@@ -180,19 +180,19 @@ Dedicated tool for retrieving files from Volcengine TOS using URLs.
    ```
 
 2. 在Dify中配置插件，输入以下参数：
-   - **Endpoint**: 您的阿里云OSS端点（例如：oss-cn-beijing.aliyuncs.com）
-   - **Bucket Name**: 您的OSS存储桶名称
-   - **AccessKey ID**: 您的阿里云AccessKey ID
-   - **AccessKey Secret**: 您的阿里云AccessKey Secret
-   - **Use HTTPS**: 是否使用HTTPS进行OSS请求（默认：true）
+   - **Endpoint**: 您的火山引擎TOS端点（例如：tos-cn-beijing.volces.com）
+   - **Bucket Name**: 您的TOS存储桶名称
+   - **AccessKey ID**: 您的火山引擎AccessKey ID
+   - **AccessKey Secret**: 您的火山引擎AccessKey Secret
+   - **Use HTTPS**: 是否使用HTTPS进行TOS请求（默认：true）
 
 ### 使用方法
 
-该插件提供两个强大的工具用于与阿里云OSS交互：
+该插件提供两个强大的工具用于与火山引擎TOS交互：
 
-#### 1. 上传文件至OSS (upload_file)
+#### 1. 上传文件至TOS (upload_file)
 
-用于将文件上传到阿里云OSS的专用工具。
+用于将文件上传到火山引擎TOS的专用工具。
 - **参数**:
   - `file`: 要上传的本地文件（必填）
   - `directory`: 存储桶下的一级目录（必填）
@@ -200,16 +200,16 @@ Dedicated tool for retrieving files from Volcengine TOS using URLs.
     - `no_subdirectory`: 直接存储在指定目录中
     - `yyyy_mm_dd_hierarchy`: 存储在基于日期的分层结构中
     - `yyyy_mm_dd_combined`: 存储在合并日期目录中
-  - `filename`: 用于OSS存储的可选自定义文件名
+  - `filename`: 用于TOS存储的可选自定义文件名
   - `filename_mode`: 可选的文件名组成模式（默认：`filename`）
     - `filename`: 使用原始文件名
     - `filename_timestamp`: 使用原始文件名加上时间戳
 
 #### 2. 通过URL获取文件 (get_file_by_url)
 
-用于使用URL从阿里云OSS检索文件的专用工具。
+用于使用URL从火山引擎TOS检索文件的专用工具。
 - **参数**:
-  - `file_url`: 阿里云OSS中文件的URL
+  - `file_url`: 火山引擎TOS中文件的URL
 
 ### 示例
 
@@ -232,8 +232,8 @@ Dedicated tool for retrieving files from Volcengine TOS using URLs.
 
 ### 注意事项
 
-- 确保您的OSS存储桶配置了正确的权限
-- 该插件需要具有适当OSS访问权限的有效阿里云凭证
+- 确保您的TOS存储桶配置了正确的权限
+- 该插件需要具有适当TOS访问权限的有效火山引擎凭证
 - 对于非常大的文件，请考虑使用分片上传功能（目前未实现）
 
 ### 开发者信息
@@ -241,7 +241,7 @@ Dedicated tool for retrieving files from Volcengine TOS using URLs.
 - **作者**: `https://github.com/sawyer-shi`
 - **邮箱**: sawyer36@foxmail.com
 - **许可证**: MIT License
-- **源码地址**: `https://github.com/sawyer-shi/dify-plugins-aliyun_oss`
+- **源码地址**: `https://github.com/sawyer-shi/dify-plugins-volcengine_tos`
 - **支持**: 通过Dify平台和GitHub Issues
 
 ---

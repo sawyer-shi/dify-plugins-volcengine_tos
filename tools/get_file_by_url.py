@@ -1,9 +1,6 @@
 import os
-import re
-import os
-import urllib.parse
-from collections.abc import Generator
 from typing import Any, Dict
+from collections.abc import Generator
 
 import tos
 from dify_plugin import Tool
@@ -15,130 +12,156 @@ class GetFileByUrlTool(Tool):
             # 验证工具参数中的认证信息
             self._validate_credentials(tool_parameters)
             
-            # 执行文件获取操作
-            result = self._get_file_by_url(tool_parameters, tool_parameters)
+            # 执行下载文件功能
+            result = self._download_file(tool_parameters)
             
-            # 提取文件扩展名
-            _, extension = os.path.splitext(result['filename'])
-            if not extension:
-                # 如果没有扩展名，根据content_type尝试推断
-                if result['content_type'] == 'image/png':
-                    extension = '.png'
-                elif result['content_type'] == 'image/jpeg':
-                    extension = '.jpg'
-                elif result['content_type'] == 'image/gif':
-                    extension = '.gif'
-                else:
-                    extension = ''
+            # 返回JSON结果
+            yield self.create_json_message(result)
             
-            # 构建文件元数据，确保包含支持图片显示的所有必要属性
-            file_metadata = {
-                'filename': result['filename'],
-                'content_type': result['content_type'],
-                'size': result['file_size'],
-                'mime_type': result['content_type'],
-                'extension': extension
-            }
+            # 生成友好的文本消息
+            file_size = result.get('file_size', 0)
+            file_size_mb = file_size / (1024 * 1024) if file_size > 0 else 0
+            success_message = "File downloaded successfully!\n"
+            success_message += f"Filename: {result['filename']}\n"
+            success_message += f"File type: {result.get('file_type', 'unknown')}\n"
+            success_message += f"File size: {file_size_mb:.2f} MB\n"
+            success_message += f"Object key: {result['object_key']}\n"
+            success_message += f"Content type: {result.get('content_type')}"
             
-            # 如果是图片类型，添加特定标志以确保在Dify页面正常显示
-            if result['content_type'].startswith('image/'):
-                file_metadata['is_image'] = True
-                file_metadata['display_as_image'] = True
-                file_metadata['type'] = 'image'
-            
-            # 使用create_blob_message返回文件内容
-            yield self.create_blob_message(
-                result['file_content'],
-                file_metadata
-            )
-            
-            # 在text中输出成功消息、文件大小和类型，文件大小以MB为单位 - 英文消息
-            file_size_mb = result['file_size'] / (1024 * 1024) if result['file_size'] > 0 else 0
-            success_message = f"File downloaded successfully: {result['filename']}\nFile size: {file_size_mb:.2f} MB\nFile type: {result['content_type']}"
             yield self.create_text_message(success_message)
         except Exception as e:
-            # 失败时在text中输出错误信息 - 英文消息
-            yield self.create_text_message(f"Failed to download file: {str(e)}")
+            # 在text中输出失败信息 - 英文消息
+            yield self.create_text_message(f"Operation failed: {str(e)}")
+            # 同时抛出异常以保持原有行为
+            raise ValueError(f"Operation failed: {str(e)}")
     
     def _validate_credentials(self, credentials: dict[str, Any]) -> None:
         # 验证必填字段是否存在
-        required_fields = ['endpoint', 'bucket', 'access_key_id', 'access_key_secret']
+        required_fields = ['endpoint', 'bucket']
         for field in required_fields:
             if field not in credentials or not credentials[field]:
                 raise ValueError(f"Missing required credential: {field}")
+        # access_key_id和access_key_secret将从provider获取，不需要在工具参数中验证
     
-    def _get_file_by_url(self, parameters: dict[str, Any], credentials: dict[str, Any]) -> dict:
+    def _download_file(self, parameters: dict[str, Any]) -> dict:
         try:
-            # 获取文件URL
-            file_url = parameters.get('file_url')
+            # 获取URL或object_key参数
+            url = parameters.get('url')
+            object_key = parameters.get('object_key')
             
-            if not file_url:
-                raise ValueError("Missing required parameter: file_url")
+            # 验证至少提供了一个参数
+            if not url and not object_key:
+                raise ValueError("Missing required parameter: either 'url' or 'object_key' must be provided")
             
-            # 验证认证参数
-            required_auth_fields = ['endpoint', 'bucket', 'access_key_id', 'access_key_secret']
-            for field in required_auth_fields:
-                if field not in parameters or not parameters[field]:
-                    raise ValueError(f"Missing required authentication parameter: {field}")
+            bucket = parameters['bucket']
+            endpoint = parameters['endpoint']
             
-            # 解析URL获取bucket、endpoint和object_key
-            bucket, endpoint, object_key = self._parse_tos_url(file_url)
+            # 如果提供了URL，解析它
+            if url:
+                parsed_bucket, parsed_endpoint, parsed_object_key = self._parse_tos_url(url)
+                object_key = parsed_object_key
+                # 使用URL中的bucket和endpoint覆盖传入的参数（如果有）
+                if parsed_bucket:
+                    bucket = parsed_bucket
+                if parsed_endpoint:
+                    endpoint = parsed_endpoint
             
-            # 如果URL中的bucket与凭证中的bucket不一致，使用URL中的bucket
-            if bucket and bucket != credentials['bucket']:
-                bucket_name = bucket
-            else:
-                bucket_name = credentials['bucket']
+            # 获取认证信息
+            credentials = self.runtime.get_credentials() if self.runtime else {}
+            access_key_id = credentials.get('access_key_id') or parameters.get('access_key_id')
+            access_key_secret = credentials.get('access_key_secret') or parameters.get('access_key_secret')
+            
+            # 验证认证信息
+            if not access_key_id or not access_key_secret:
+                raise ValueError("Missing required credential: access_key_id or access_key_secret")
             
             # 创建TOS客户端
             client = tos.TosClient(
-                ak=credentials['access_key_id'],
-                sk=credentials['access_key_secret'],
+                ak=access_key_id,
+                sk=access_key_secret,
                 endpoint=endpoint
             )
             
-            # 获取文件内容
+            # 获取文件元信息
+            head_response = client.head_object(
+                bucket=bucket,
+                key=object_key
+            )
+            
+            # 读取文件内容
             response = client.get_object(
-                bucket=bucket_name,
+                bucket=bucket,
                 key=object_key
             )
             file_content = response.read()
             
             # 获取文件大小
-            file_size = len(file_content)
+            file_size = head_response['content-length']
             
-            # 获取文件类型
-            head_response = client.head_object(
-                bucket=bucket_name,
-                key=object_key
-            )
+            # 获取文件内容类型
             content_type = head_response.get('content-type', 'application/octet-stream')
             
-            # 获取文件名
-            filename = os.path.basename(object_key)
+            # 生成文件名
+            filename = parameters.get('filename')
+            if not filename:
+                # 从object_key中提取文件名
+                filename = os.path.basename(object_key)
+                if not filename:
+                    filename = "download"
+            
+            # 从内容类型或文件名推断文件类型
+            file_type = 'unknown'
+            _, extension = os.path.splitext(filename)
+            if extension:
+                file_type = extension[1:].lower()
+            else:
+                # 尝试从content_type推断文件类型
+                content_type_map = {
+                    'image/': 'image',
+                    'audio/': 'audio',
+                    'video/': 'video',
+                    'application/pdf': 'pdf',
+                    'text/': 'text',
+                    'application/json': 'json',
+                    'application/xml': 'xml'
+                }
+                for ct, ft in content_type_map.items():
+                    if content_type.startswith(ct):
+                        file_type = ft
+                        break
             
             return {
                 "status": "success",
+                "file_content": file_content,
                 "filename": filename,
-                "file_content": file_content,  # 返回原始字节内容，不进行解码
+                "file_size": file_size,
                 "content_type": content_type,
-                "file_size": file_size
+                "file_type": file_type,
+                "object_key": object_key,
+                "bucket": bucket,
+                "endpoint": endpoint
             }
         except Exception as e:
-            raise ValueError(f"Failed to retrieve file: {str(e)}")
+            raise ValueError(f"Failed to download file: {str(e)}")
     
-    def _parse_tos_url(self, url: str) -> tuple:
-        # 匹配TOS URL格式：https://bucket.endpoint/object_key
-        pattern = r'https?://([^.]+)\.([^/]+)/(.*)'
-        match = re.match(pattern, url)
+    def _parse_tos_url(self, url: str) -> tuple[str, str, str]:
+        """解析TOS URL格式，提取bucket, endpoint和object_key"""
+        import re
+        # 尝试匹配TOS URL的多种格式
         
-        if match:
-            bucket = match.group(1)
-            endpoint = match.group(2)
-            object_key = match.group(3)
-            # 对URL编码的对象键进行解码，处理中文等特殊字符
-            object_key = urllib.parse.unquote(object_key)
-            return bucket, endpoint, object_key
+        # 格式1: https://bucket.endpoint/path/to/object
+        pattern1 = r'^https?://([^.]+)\.([^/]+)/(.*)$'
+        match1 = re.match(pattern1, url)
         
-        # 如果URL格式不符合预期，抛出异常
+        if match1:
+            return match1.group(1), match1.group(2), match1.group(3)
+        
+        # 格式2: https://bucket.endpoint
+        pattern2 = r'^https?://([^.]+)\.([^/]+)$'
+        match2 = re.match(pattern2, url)
+        
+        if match2:
+            return match2.group(1), match2.group(2), ''
+        
+        # 如果以上格式都不匹配，抛出异常
         raise ValueError(f"Invalid TOS URL format: {url}")

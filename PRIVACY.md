@@ -91,7 +91,7 @@ The Volcengine TOS Plugin ("Plugin") is designed to facilitate file uploads to a
 
 **开发者：** `https://github.com/sawyer-shi` 
 **邮箱：** sawyer36@foxmail.com 
-**项目代码来源：** `https://github.com/sawyer-shi/dify-plugins-aliyun_oss` 
+**项目代码来源：** `https://github.com/sawyer-shi/dify-plugins-volcengine_tos` 
 **支持：** 通过Dify平台和GitHub Issues提供 
 
 --- 

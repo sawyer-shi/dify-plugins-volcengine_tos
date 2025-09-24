@@ -2,85 +2,59 @@ identity:
   name: "get_file_by_url"
   author: "sawyer-shi"
   label:
-    en_US: "Get File by OSS URL"
-    zh_Hans: "通过OSS URL获取文件"
-    pt_BR: "Obter Arquivo por URL OSS"
-  tags:
-    - utilities
-    - productivity
+    en_US: "Download File from Volcengine TOS"
+    zh_Hans: "从火山引擎TOS下载文件"
+    pt_BR: "Baixar arquivo do Volcengine TOS"
 description:
   human:
-    en_US: "Retrieve the content of a file from Alibaba Cloud OSS using its URL"
-    zh_Hans: "通过URL获取阿里云OSS中的文件内容"
-    pt_BR: "Recupere o conteúdo de um arquivo do Alibaba Cloud OSS usando sua URL"
-  llm: "Retrieve the content of a file from Alibaba Cloud OSS using its URL"
+    en_US: "Download files from Volcengine TOS through URL or object key"
+    zh_Hans: "通过URL或对象键从火山引擎TOS下载文件"
+    pt_BR: "Baixe arquivos do Volcengine TOS por meio de URL ou chave de objeto"
+  llm: "This tool allows users to download files from Volcengine TOS through URL or object key. Provide either URL or object key and configuration parameters."
 parameters:
-  - name: endpoint
+  
+  # 下载相关参数
+  - name: url
     type: string
-    required: true
+    required: false
     label:
-      en_US: "Endpoint"
-      zh_Hans: "Endpoint"
-      pt_BR: "Endpoint"
+      en_US: "URL"
+      zh_Hans: "文件URL"
+      pt_BR: "URL"
     human_description:
-      en_US: "Alibaba Cloud OSS Endpoint (e.g. oss-cn-beijing.aliyuncs.com)"
-      zh_Hans: "阿里云OSS Endpoint（例如：oss-cn-beijing.aliyuncs.com）"
-      pt_BR: "Endpoint do Alibaba Cloud OSS (ex: oss-cn-beijing.aliyuncs.com)"
-    llm_description: "Alibaba Cloud OSS Endpoint"
-    form: form
-  - name: bucket
+      en_US: "The URL of the file to download. Either URL or object_key must be provided"
+      zh_Hans: "要下载的文件URL。必须提供URL或对象键"
+      pt_BR: "A URL do arquivo para download. URL ou object_key devem ser fornecidos"
+    llm_description: "The URL of the file to download from Volcengine TOS. Required if object_key is not provided"
+    form: input
+  
+  - name: object_key
     type: string
-    required: true
+    required: false
     label:
-      en_US: "Bucket"
-      zh_Hans: "Bucket"
-      pt_BR: "Bucket"
+      en_US: "Object Key"
+      zh_Hans: "对象键"
+      pt_BR: "Chave de objeto"
     human_description:
-      en_US: "Alibaba Cloud OSS Bucket name"
-      zh_Hans: "阿里云OSS Bucket名称"
-      pt_BR: "Nome do Bucket do Alibaba Cloud OSS"
-    llm_description: "Alibaba Cloud OSS Bucket name"
-    form: form
-  - name: access_key_id
+      en_US: "The object key of the file to download. Either URL or object_key must be provided"
+      zh_Hans: "要下载的文件对象键。必须提供URL或对象键"
+      pt_BR: "A chave de objeto do arquivo para download. URL ou object_key devem ser fornecidos"
+    llm_description: "The object key of the file to download from Volcengine TOS. Required if URL is not provided"
+    form: input
+  
+  - name: filename
     type: string
-    required: true
+    required: false
     label:
-      en_US: "AccessKey ID"
-      zh_Hans: "AccessKey ID"
-      pt_BR: "ID da AccessKey"
+      en_US: "Filename"
+      zh_Hans: "文件名"
+      pt_BR: "Nome do arquivo"
     human_description:
-      en_US: "Your Alibaba Cloud AccessKey ID"
-      zh_Hans: "您的阿里云AccessKey ID"
-      pt_BR: "Seu ID da AccessKey do Alibaba Cloud"
-    llm_description: "Alibaba Cloud AccessKey ID"
-    form: form
-  - name: access_key_secret
-    type: string
-    required: true
-    sensitive: true
-    label:
-      en_US: "AccessKey Secret"
-      zh_Hans: "AccessKey Secret"
-      pt_BR: "Segredo da AccessKey"
-    human_description:
-      en_US: "Your Alibaba Cloud AccessKey Secret"
-      zh_Hans: "您的阿里云AccessKey Secret"
-      pt_BR: "Seu Segredo da AccessKey do Alibaba Cloud"
-    llm_description: "Alibaba Cloud AccessKey Secret"
-    form: form
-  - name: file_url
-    type: string
-    required: true
-    label:
-      en_US: OSS File URL
-      zh_Hans: OSS文件URL
-      pt_BR: URL do Arquivo OSS
-    human_description:
-      en_US: "The URL of the file in Alibaba Cloud OSS"
-      zh_Hans: "阿里云OSS中文件的URL"
-      pt_BR: "A URL do arquivo no Alibaba Cloud OSS"
-    llm_description: "The URL of the file in Alibaba Cloud OSS"
-    form: llm
+      en_US: "Custom filename for the downloaded file. If not provided, the original filename will be used"
+      zh_Hans: "下载文件的自定义文件名。如果未提供，将使用原始文件名"
+      pt_BR: "Nome personalizado para o arquivo baixado. Se não for fornecido, o nome original do arquivo será usado"
+    llm_description: "Optional custom filename for the downloaded file. If not provided, the original filename will be used"
+    form: input
 extra:
   python:
     source: tools/get_file_by_url.py
