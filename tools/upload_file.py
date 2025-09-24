@@ -38,12 +38,9 @@ class UploadFileTool(Tool):
             raise ValueError(f"Operation failed: {str(e)}")
     
     def _validate_credentials(self, credentials: dict[str, Any]) -> None:
-        # 验证必填字段是否存在
-        required_fields = ['endpoint', 'bucket']
-        for field in required_fields:
-            if field not in credentials or not credentials[field]:
-                raise ValueError(f"Missing required credential: {field}")
+        # endpoint和bucket将从provider获取，不需要在工具参数中验证
         # access_key_id和access_key_secret将从provider获取，不需要在工具参数中验证
+        pass
     
     def _upload_file(self, parameters: dict[str, Any]) -> dict:
         try:
@@ -102,18 +99,20 @@ class UploadFileTool(Tool):
             
             # 获取认证信息
             credentials = self.runtime.get_credentials() if self.runtime else {}
-            access_key_id = credentials.get('access_key_id') or parameters.get('access_key_id')
-            access_key_secret = credentials.get('access_key_secret') or parameters.get('access_key_secret')
+            access_key_id = credentials.get('access_key_id')
+            access_key_secret = credentials.get('access_key_secret')
+            bucket = credentials.get('bucket')
+            endpoint = credentials.get('endpoint')
             
             # 验证认证信息
-            if not access_key_id or not access_key_secret:
-                raise ValueError("Missing required credential: access_key_id or access_key_secret")
+            if not access_key_id or not access_key_secret or not bucket or not endpoint:
+                raise ValueError("Missing required credential: access_key_id, access_key_secret, bucket or endpoint")
             
             # 创建TOS客户端
             client = tos.TosClient(
                 ak=access_key_id,
                 sk=access_key_secret,
-                endpoint=parameters['endpoint']
+                endpoint=endpoint
             )
             
             # 上传文件
@@ -124,7 +123,7 @@ class UploadFileTool(Tool):
                     file_content = file.blob
                     file_size = len(file_content)
                     client.put_object(
-                        bucket=parameters['bucket'],
+                        bucket=bucket,
                         key=object_key,
                         content=file_content
                     )
@@ -135,7 +134,7 @@ class UploadFileTool(Tool):
                     file_content = file.read()
                     file_size = len(file_content)
                     client.put_object(
-                        bucket=parameters['bucket'],
+                        bucket=bucket,
                         key=object_key,
                         content=file_content
                     )
@@ -143,7 +142,7 @@ class UploadFileTool(Tool):
                 elif isinstance(file, (str, bytes, os.PathLike)) and os.path.exists(file):
                     file_size = os.path.getsize(file)
                     client.upload_file(
-                        bucket=parameters['bucket'],
+                        bucket=bucket,
                         key=object_key,
                         file_path=file
                     )
@@ -153,8 +152,7 @@ class UploadFileTool(Tool):
                 raise ValueError(f"Failed to upload file: {str(e)}")
             
             # 构建文件URL
-            protocol = 'https' if parameters.get('use_https', True) else 'http'
-            file_url = f"{protocol}://{parameters['bucket']}.{parameters['endpoint']}/{object_key}"
+            file_url = f"https://{bucket}.{endpoint}/{object_key}"
             
             # 获取文件类型
             file_type = 'unknown'

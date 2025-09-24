@@ -7,53 +7,25 @@ identity:
     pt_BR: "Baixar arquivo do Volcengine TOS"
 description:
   human:
-    en_US: "Download files from Volcengine TOS through URL or object key"
-    zh_Hans: "通过URL或对象键从火山引擎TOS下载文件"
-    pt_BR: "Baixe arquivos do Volcengine TOS por meio de URL ou chave de objeto"
-  llm: "This tool allows users to download files from Volcengine TOS through URL or object key. Provide either URL or object key and configuration parameters."
+    en_US: "Download files from Volcengine TOS through URL"
+    zh_Hans: "通过URL从火山引擎TOS下载文件"
+    pt_BR: "Baixe arquivos do Volcengine TOS por meio de URL"
+  llm: "This tool allows users to download files from Volcengine TOS through URL. Provide URL and configuration parameters."
 parameters:
   
   # 下载相关参数
   - name: url
     type: string
-    required: false
+    required: true
     label:
       en_US: "URL"
       zh_Hans: "文件URL"
       pt_BR: "URL"
     human_description:
-      en_US: "The URL of the file to download. Either URL or object_key must be provided"
-      zh_Hans: "要下载的文件URL。必须提供URL或对象键"
-      pt_BR: "A URL do arquivo para download. URL ou object_key devem ser fornecidos"
-    llm_description: "The URL of the file to download from Volcengine TOS. Required if object_key is not provided"
-    form: llm
-  
-  - name: object_key
-    type: string
-    required: false
-    label:
-      en_US: "Object Key"
-      zh_Hans: "对象键"
-      pt_BR: "Chave de objeto"
-    human_description:
-      en_US: "The object key of the file to download. Either URL or object_key must be provided"
-      zh_Hans: "要下载的文件对象键。必须提供URL或对象键"
-      pt_BR: "A chave de objeto do arquivo para download. URL ou object_key devem ser fornecidos"
-    llm_description: "The object key of the file to download from Volcengine TOS. Required if URL is not provided"
-    form: llm
-  
-  - name: filename
-    type: string
-    required: false
-    label:
-      en_US: "Filename"
-      zh_Hans: "文件名"
-      pt_BR: "Nome do arquivo"
-    human_description:
-      en_US: "Custom filename for the downloaded file. If not provided, the original filename will be used"
-      zh_Hans: "下载文件的自定义文件名。如果未提供，将使用原始文件名"
-      pt_BR: "Nome personalizado para o arquivo baixado. Se não for fornecido, o nome original do arquivo será usado"
-    llm_description: "Optional custom filename for the downloaded file. If not provided, the original filename will be used"
+      en_US: "The URL of the file to download"
+      zh_Hans: "要下载的文件URL"
+      pt_BR: "A URL do arquivo para download"
+    llm_description: "The URL of the file to download from Volcengine TOS"
     form: llm
 extra:
   python:

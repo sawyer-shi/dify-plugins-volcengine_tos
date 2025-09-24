@@ -36,44 +36,38 @@ class GetFileByUrlTool(Tool):
             raise ValueError(f"Operation failed: {str(e)}")
     
     def _validate_credentials(self, credentials: dict[str, Any]) -> None:
-        # 验证必填字段是否存在
-        required_fields = ['endpoint', 'bucket']
-        for field in required_fields:
-            if field not in credentials or not credentials[field]:
-                raise ValueError(f"Missing required credential: {field}")
+        # endpoint和bucket将从provider获取，不需要在工具参数中验证
         # access_key_id和access_key_secret将从provider获取，不需要在工具参数中验证
+        pass
     
     def _download_file(self, parameters: dict[str, Any]) -> dict:
         try:
-            # 获取URL或object_key参数
+            # 获取URL参数
             url = parameters.get('url')
-            object_key = parameters.get('object_key')
             
-            # 验证至少提供了一个参数
-            if not url and not object_key:
-                raise ValueError("Missing required parameter: either 'url' or 'object_key' must be provided")
-            
-            bucket = parameters['bucket']
-            endpoint = parameters['endpoint']
-            
-            # 如果提供了URL，解析它
-            if url:
-                parsed_bucket, parsed_endpoint, parsed_object_key = self._parse_tos_url(url)
-                object_key = parsed_object_key
-                # 使用URL中的bucket和endpoint覆盖传入的参数（如果有）
-                if parsed_bucket:
-                    bucket = parsed_bucket
-                if parsed_endpoint:
-                    endpoint = parsed_endpoint
+            # 验证URL参数
+            if not url:
+                raise ValueError("Missing required parameter: 'url' must be provided")
             
             # 获取认证信息
             credentials = self.runtime.get_credentials() if self.runtime else {}
-            access_key_id = credentials.get('access_key_id') or parameters.get('access_key_id')
-            access_key_secret = credentials.get('access_key_secret') or parameters.get('access_key_secret')
+            access_key_id = credentials.get('access_key_id')
+            access_key_secret = credentials.get('access_key_secret')
+            bucket = credentials.get('bucket')
+            endpoint = credentials.get('endpoint')
             
             # 验证认证信息
-            if not access_key_id or not access_key_secret:
-                raise ValueError("Missing required credential: access_key_id or access_key_secret")
+            if not access_key_id or not access_key_secret or not bucket or not endpoint:
+                raise ValueError("Missing required credential: access_key_id, access_key_secret, bucket or endpoint")
+            
+            # 解析URL
+            parsed_bucket, parsed_endpoint, object_key = self._parse_tos_url(url)
+            
+            # 使用URL中的bucket和endpoint覆盖传入的参数（如果有）
+            if parsed_bucket:
+                bucket = parsed_bucket
+            if parsed_endpoint:
+                endpoint = parsed_endpoint
             
             # 创建TOS客户端
             client = tos.TosClient(

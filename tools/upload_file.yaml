@@ -30,7 +30,7 @@ parameters:
   
   - name: directory
     type: string
-    required: false
+    required: true
     label:
       en_US: "Directory"
       zh_Hans: "目录"
@@ -57,9 +57,8 @@ parameters:
     form: llm
   
   - name: directory_mode
-    type: string
+    type: select
     required: false
-    default: "no_subdirectory"
     label:
       en_US: "Directory Mode"
       zh_Hans: "目录模式"
@@ -69,67 +68,50 @@ parameters:
       zh_Hans: "如何在目录中组织文件"
       pt_BR: "Como organizar arquivos em diretórios"
     llm_description: "Specify how to organize files in directories. 'no_subdirectory' for no subdirectories, 'yyyy_mm_dd_combined' for a single date directory, 'yyyy_mm_dd_hierarchy' for nested date directories"
-    enum:
-      - "no_subdirectory"
-      - "yyyy_mm_dd_combined"
-      - "yyyy_mm_dd_hierarchy"
-    enum_labels:
-      en_US:
-        - "No subdirectory"
-        - "Date combined"
-        - "Date hierarchy"
-      zh_Hans:
-        - "无子目录"
-        - "日期一体"
-        - "日期层级"
-      pt_BR:
-        - "Sem subdiretório"
-        - "Data combinada"
-        - "Hierarquia de datas"
     form: llm
+    options:
+      - label:
+          en_US: "No subdirectory"
+          zh_Hans: "无子目录"
+          pt_BR: "Sem subdiretório"
+        value: "no_subdirectory"
+      - label:
+          en_US: "Date combined"
+          zh_Hans: "日期一体"
+          pt_BR: "Data combinada"
+        value: "yyyy_mm_dd_combined"
+      - label:
+          en_US: "Date hierarchy"
+          zh_Hans: "日期层级"
+          pt_BR: "Hierarquia de datas"
+        value: "yyyy_mm_dd_hierarchy"
+    default: "no_subdirectory"
   
   - name: filename_mode
-    type: string
+    type: select
     required: false
-    default: "filename"
     label:
       en_US: "Filename Mode"
-      zh_Hans: "文件名模式"
-      pt_BR: "Modo de nome de arquivo"
+      zh_Hans: "文件名组成"
+      pt_BR: "Modo de Nome do Arquivo"
     human_description:
-      en_US: "How to generate filenames"
-      zh_Hans: "如何生成文件名"
-      pt_BR: "Como gerar nomes de arquivo"
-    llm_description: "Specify how to generate filenames. 'filename' for original filename, 'filename_timestamp' for filename with timestamp"
-    enum:
-      - "filename"
-      - "filename_timestamp"
-    enum_labels:
-      en_US:
-        - "Original filename"
-        - "Filename with timestamp"
-      zh_Hans:
-        - "原始文件名"
-        - "带时间戳的文件名"
-      pt_BR:
-        - "Nome original do arquivo"
-        - "Nome do arquivo com carimbo de data/hora"
+      en_US: "The way to compose the filename stored in OSS. 'filename': use the original filename; 'filename_timestamp': use the original filename plus timestamp"
+      zh_Hans: "存储在OSS上的文件名组成方式。'filename'：使用原始文件名；'filename_timestamp'：使用原始文件名加上时间戳"
+      pt_BR: "A forma de compor o nome do arquivo armazenado no OSS. 'filename': usar o nome original do arquivo; 'filename_timestamp': usar o nome original do arquivo mais carimbo de data/hora"
+    llm_description: "The way to compose the filename stored in OSS"
     form: llm
-  
-  - name: use_https
-    type: boolean
-    required: false
-    default: true
-    label:
-      en_US: "Use HTTPS"
-      zh_Hans: "使用HTTPS"
-      pt_BR: "Usar HTTPS"
-    human_description:
-      en_US: "Whether to use HTTPS for the generated URL"
-      zh_Hans: "是否为生成的URL使用HTTPS"
-      pt_BR: "Se deve usar HTTPS para a URL gerada"
-    llm_description: "Specify whether to use HTTPS protocol for the generated file URL"
-    form: llm
+    options:
+      - label:
+          en_US: "Filename"
+          zh_Hans: "纯文件名"
+          pt_BR: "Nome do Arquivo"
+        value: "filename"
+      - label:
+          en_US: "Filename + Timestamp"
+          zh_Hans: "文件名+时间戳数字"
+          pt_BR: "Nome do Arquivo + Carimbo de Data/Hora"
+        value: "filename_timestamp"
+    default: "filename"
 extra:
   python:
     source: tools/upload_file.py
