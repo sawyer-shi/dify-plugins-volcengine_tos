@@ -26,7 +26,7 @@ parameters:
       zh_Hans: "要上传的文件"
       pt_BR: "O arquivo a ser carregado"
     llm_description: "The file object to be uploaded to Volcengine TOS"
-    form: file
+    form: llm
   
   - name: directory
     type: string
@@ -40,7 +40,7 @@ parameters:
       zh_Hans: "文件将存储在存储桶中的目录路径"
       pt_BR: "O diretório no bucket onde o arquivo será armazenado"
     llm_description: "Optional directory path within the bucket to store the uploaded file"
-    form: input
+    form: llm
   
   - name: filename
     type: string
@@ -54,7 +54,7 @@ parameters:
       zh_Hans: "上传文件的自定义文件名。如果未提供，将使用原始文件名"
       pt_BR: "Nome personalizado para o arquivo carregado. Se não for fornecido, o nome original do arquivo será usado"
     llm_description: "Optional custom filename for the uploaded file. If not provided, the original filename will be used"
-    form: input
+    form: llm
   
   - name: directory_mode
     type: string
@@ -86,7 +86,7 @@ parameters:
         - "Sem subdiretório"
         - "Data combinada"
         - "Hierarquia de datas"
-    form: select
+    form: llm
   
   - name: filename_mode
     type: string
@@ -114,7 +114,7 @@ parameters:
       pt_BR:
         - "Nome original do arquivo"
         - "Nome do arquivo com carimbo de data/hora"
-    form: select
+    form: llm
   
   - name: use_https
     type: boolean
@@ -129,7 +129,7 @@ parameters:
       zh_Hans: "是否为生成的URL使用HTTPS"
       pt_BR: "Se deve usar HTTPS para a URL gerada"
     llm_description: "Specify whether to use HTTPS protocol for the generated file URL"
-    form: switch
+    form: llm
 extra:
   python:
     source: tools/upload_file.py

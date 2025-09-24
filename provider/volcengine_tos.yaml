@@ -6,17 +6,14 @@ identity:
     zh_Hans: "火山引擎TOS"
     pt_BR: "Volcengine TOS"
   description:
-    human:
-      en_US: "Upload and download files from Volcengine TOS"
-      zh_Hans: "从火山引擎TOS上传和下载文件"
-      pt_BR: "Faça upload e download de arquivos do Volcengine TOS"
-    llm: "This tool allows users to upload and download files from Volcengine TOS. Provide the necessary configuration parameters and file information."
+    en_US: "Upload and download files from Volcengine TOS."
+    zh_Hans: "从火山引擎TOS上传和下载文件。"
+    pt_BR: "Faça upload e download de arquivos do Volcengine TOS."
+  icon: "icon.png"
 
 tools:
-  - name: upload_file
-    entry: tools/upload_file.yaml
-  - name: get_file_by_url
-    entry: tools/get_file_by_url.yaml
+  - "tools/upload_file.yaml"
+  - "tools/get_file_by_url.yaml"
 
 credentials_for_provider:
   access_key_id:

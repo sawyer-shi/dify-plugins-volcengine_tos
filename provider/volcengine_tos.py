@@ -51,20 +51,16 @@ class VolcengineTosProvider(ToolProvider):
             )
             auth = CredentialProviderAuth(static_credentials, region)
 
+            # 统一超时（字符串也可被转换），默认更短以避免在验证阶段长时间阻塞
+            timeout = int(credentials.get('timeout', 10) or 10)
             client = tos.TosClient(
                 auth=auth,
                 endpoint=endpoint,
-                connect_timeout=credentials.get('timeout', 30)
+                connect_timeout=timeout
             )
 
-            response = client.list_buckets()
-            print("Response类型:", type(response))
-            print("Response属性列表:", dir(response))
-            print("client.list_buckets() 获取到的bucket列表:", getattr(response, 'bucket_list', []))
-            buckets = [b.name for b in getattr(response, 'bucket_list', [])]
-            print("获取到的bucket名称列表:", buckets)
-            if credentials['bucket'] not in buckets:
-                raise ToolProviderCredentialValidationError(f"没有访问当前输入bucket名称 '{credentials['bucket']}' 的权限")
+            # 使用 HeadBucket 进行最小权限校验，避免需要列举所有桶权限导致报错或长时间等待
+            client.head_bucket(credentials['bucket'])
 
         except tos.exceptions.TosClientError as e:
             error_code = e.code
