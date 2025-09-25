@@ -172,16 +172,25 @@ class UploadFileTool(Tool):
             else:
                 # 用户指定了文件名
                 final_filename = filename
-                # 确保文件名包含扩展名
-                if '.' not in final_filename:
-                    # 尝试从原始文件获取扩展名
-                    if hasattr(file, 'name') and file.name:
-                        _, file_extension = os.path.splitext(file.name)
-                        if file_extension:
-                            final_filename += file_extension
-                    # 如果无法获取扩展名，使用默认扩展名
-                    else:
-                        final_filename += ".dat"
+            # 从原始文件获取扩展名
+            original_extension = ''
+            # 1. 处理dify_plugin的File对象
+            if hasattr(file, 'name') and file.name:
+                _, original_extension = os.path.splitext(file.name)
+            # 2. 尝试从file.filename获取
+            elif hasattr(file, 'filename') and file.filename:
+                _, original_extension = os.path.splitext(file.filename)
+            # 3. 处理普通文件对象
+            elif hasattr(file, 'name') and file.name and os.path.exists(file.name):
+                _, original_extension = os.path.splitext(os.path.basename(file.name))
+            # 4. 处理字符串路径
+            elif isinstance(file, str) and os.path.exists(file):
+                _, original_extension = os.path.splitext(os.path.basename(file))
+            
+            # 确保文件名包含原始扩展名
+            if '.' not in final_filename and original_extension:
+                final_filename += original_extension
+            # 如果原始文件没有扩展名，不添加默认扩展名
             
             # 处理目录路径
             current_date = datetime.now()
