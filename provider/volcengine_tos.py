@@ -1,12 +1,5 @@
 from typing import Any
 
-# 尽早应用猴子补丁以避免SSL问题
-try:
-    from gevent import monkey
-    monkey.patch_all(sys=True)
-except ImportError:
-    pass
-
 import tos
 from tos.auth import CredentialProviderAuth, StaticCredentialsProvider
 from dify_plugin import ToolProvider
@@ -24,7 +17,7 @@ class VolcengineTosProvider(ToolProvider):
 
             # 2. 提取访问密钥
             access_key_id = credentials['access_key_id']
-            secret_key = credentials['access_key_secret']
+            access_key_secret = credentials['access_key_secret']
 
             # 3. 验证directory和filename格式
             if 'directory' in credentials and credentials['directory']:
@@ -47,19 +40,20 @@ class VolcengineTosProvider(ToolProvider):
             # 5. 创建认证提供者并验证Bucket访问权限
             static_credentials = StaticCredentialsProvider(
                 access_key_id=access_key_id,
-                access_key_secret=secret_key
+                access_key_secret=access_key_secret
             )
             auth = CredentialProviderAuth(static_credentials, region)
 
             # 统一超时（字符串也可被转换），默认更短以避免在验证阶段长时间阻塞
             timeout = int(credentials.get('timeout', 10) or 10)
-            client = tos.TosClient(
-                auth=auth,
+            # 创建TOS客户端
+            client = tos.TosClientV2(
+                ak=access_key_id,
+                sk=access_key_secret,
                 endpoint=endpoint,
-                connect_timeout=timeout
+                region=region,
+                enable_verify_ssl=credentials.get('enable_verify_ssl', True)
             )
-
-            # 使用 HeadBucket 进行最小权限校验，避免需要列举所有桶权限导致报错或长时间等待
             client.head_bucket(credentials['bucket'])
 
         except tos.exceptions.TosClientError as e:

@@ -1,52 +1,89 @@
 import os
-from typing import Any, Dict
-from collections.abc import Generator
+import uuid
+from datetime import datetime
+from typing import Any, Dict, Generator
+from collections.abc import Mapping
 
 import tos
 from dify_plugin import Tool
 from dify_plugin.entities.tool import ToolInvokeMessage
 from dify_plugin.file.file import File
-from datetime import datetime
+
+from .utils import get_content_type_by_extension
+import time
 
 class UploadFileTool(Tool):
-    def _invoke(self, tool_parameters: dict[str, Any]) -> Generator[ToolInvokeMessage]:
+    def _invoke(self, tool_parameters: dict[str, Any]) -> Generator[ToolInvokeMessage, None, None]:
         try:
-            # 验证工具参数中的认证信息
-            self._validate_credentials(tool_parameters)
+            # 从运行时获取凭据并校验
+            credentials = self.runtime.credentials if self.runtime else {}
+            self._validate_credentials(credentials)
             
-            # 执行上传文件功能
-            result = self._upload_file(tool_parameters)
+            # 执行文件上传操作（使用运行时凭据）
+            result = self._upload_file(tool_parameters, credentials)
             
-            # 返回JSON结果
             yield self.create_json_message(result)
             
-            # 生成友好的文本消息
-            file_size = result.get('file_size', 0)
+            # 在text中输出成功信息，包含文件类型、大小（M单位）和访问链接
+            file = tool_parameters.get('file')
+            file_size = 0
+            file_type = 'unknown'
+            
+            # 尝试获取文件大小
+            if isinstance(file, File) and hasattr(file, 'blob'):
+                file_size = len(file.blob)
+            elif hasattr(file, 'read'):
+                # 保存当前文件指针位置
+                if hasattr(file, 'tell'):
+                    current_pos = file.tell()
+                else:
+                    current_pos = None
+                
+                # 读取文件内容获取大小
+                content = file.read()
+                file_size = len(content)
+                
+                # 重置文件指针
+                if hasattr(file, 'seek') and current_pos is not None:
+                    file.seek(current_pos)
+            elif isinstance(file, (str, bytes, os.PathLike)) and os.path.exists(file):
+                file_size = os.path.getsize(file)
+                
+            # 尝试获取文件类型
+            if hasattr(file, 'name'):
+                _, extension = os.path.splitext(file.name)
+                if extension:
+                    file_type = extension.lower()[1:]  # 移除点号
+            
+            # 转换文件大小为MB
             file_size_mb = file_size / (1024 * 1024) if file_size > 0 else 0
+            
+            # 使用单独的字符串格式化 - 英文消息
             success_message = "File uploaded successfully!\n"
             success_message += f"Filename: {result['filename']}\n"
-            success_message += f"File type: {result.get('file_type', 'unknown')}\n"
+            success_message += f"File type: {file_type}\n"
             success_message += f"File size: {file_size_mb:.2f} MB\n"
             success_message += f"Access URL: {result['file_url']}\n"
             success_message += f"Object key: {result['object_key']}"
-            
             yield self.create_text_message(success_message)
         except Exception as e:
             # 在text中输出失败信息 - 英文消息
-            yield self.create_text_message(f"Operation failed: {str(e)}")
+            yield self.create_text_message(f"Failed to upload file: {str(e)}")
             # 同时抛出异常以保持原有行为
-            raise ValueError(f"Operation failed: {str(e)}")
+            raise ValueError(f"Failed to upload file: {str(e)}")
     
     def _validate_credentials(self, credentials: dict[str, Any]) -> None:
-        # endpoint和bucket将从provider获取，不需要在工具参数中验证
-        # access_key_id和access_key_secret将从provider获取，不需要在工具参数中验证
-        pass
+        # 验证必填字段是否存在
+        required_fields = ['endpoint', 'bucket', 'access_key_id', 'access_key_secret']
+        for field in required_fields:
+            if field not in credentials or not credentials[field]:
+                raise ValueError(f"Missing required credential: {field}")
     
-    def _upload_file(self, parameters: dict[str, Any]) -> dict:
+    def _upload_file(self, parameters: dict[str, Any], credentials: dict[str, Any]) -> dict:
         try:
             # 获取文件对象、目录和其他参数
             file = parameters.get('file')
-            directory = parameters.get('directory', '').strip()
+            directory = parameters.get('directory', '')
             directory_mode = parameters.get('directory_mode', 'no_subdirectory')
             filename = parameters.get('filename')
             filename_mode = parameters.get('filename_mode', 'filename')
@@ -55,6 +92,27 @@ class UploadFileTool(Tool):
             if not file:
                 raise ValueError("Missing required parameter: file")
             
+            # 对directory进行前后去空格处理并允许为空（表示根目录）
+            if directory is None:
+                directory = ''
+            directory = directory.strip()
+            # 验证directory规则：禁止以空格、/或\\开头（仅当非空时）
+            if directory and (directory.startswith(' ') or directory.startswith('/') or directory.startswith('\\')):
+                raise ValueError("Directory cannot start with space, / or \\ ")
+            
+            # 如果用户指定了filename，对其进行前后去空格处理
+            if filename:
+                filename = filename.strip()
+                # 验证filename规则：禁止以空格、/或\开头
+                if filename.startswith(' ') or filename.startswith('/') or filename.startswith('\\'):
+                    raise ValueError("Filename cannot start with space, / or \\ ")
+            
+            # 验证认证参数（来自运行时凭据）
+            required_auth_fields = ['endpoint', 'bucket', 'access_key_id', 'access_key_secret']
+            for field in required_auth_fields:
+                if field not in credentials or not credentials[field]:
+                    raise ValueError(f"Missing required authentication parameter: {field}")
+            
             # 生成文件名
             source_file_name = "unknown"
             if not filename:
@@ -62,7 +120,8 @@ class UploadFileTool(Tool):
                 base_name = "upload"
                 extension = ".dat"  # 默认扩展名
                 
-                # 尝试从文件对象获取原始文件名和扩展名
+                # 尝试从文件对象获取原始文件名和扩展名 - 加强版
+                # 1. 处理dify_plugin的File对象
                 if hasattr(file, 'name') and file.name:
                     original_filename = file.name
                     source_file_name = original_filename
@@ -70,6 +129,8 @@ class UploadFileTool(Tool):
                     if file_extension:
                         extension = file_extension
                         base_name = file_base_name
+                
+                # 2. 尝试从file.filename获取（常见于某些Web框架）
                 elif hasattr(file, 'filename') and file.filename:
                     original_filename = file.filename
                     source_file_name = original_filename
@@ -78,188 +139,164 @@ class UploadFileTool(Tool):
                         extension = file_extension
                         base_name = file_base_name
                 
-                # 尝试从文件内容类型推断扩展名
-                if hasattr(file, 'content_type') and file.content_type:
-                    extension = self._get_extension_from_content_type(file.content_type)
+                # 3. 处理普通文件对象（如open()打开的文件）
+                elif hasattr(file, 'name') and file.name and os.path.exists(file.name):
+                    original_filename = os.path.basename(file.name)
+                    source_file_name = original_filename
+                    file_base_name, file_extension = os.path.splitext(original_filename)
+                    if file_extension:
+                        extension = file_extension
+                        base_name = file_base_name
                 
-                # 确保扩展名是小写的，并且包含点号
-                if extension and not extension.startswith('.'):
-                    extension = '.' + extension
-                extension = extension.lower()
+                # 4. 处理字节流对象（尝试从其属性获取扩展名）
+                elif isinstance(file, bytes):
+                    # 对于字节流，我们无法获取原始文件名，使用默认值
+                    pass
                 
-                # 根据filename_mode处理文件名
-                if filename_mode == 'filename_timestamp':
-                    timestamp = datetime.now().strftime('%Y%m%d%H%M%S%f')[:-3]
-                    filename = f"{base_name}_{timestamp}{extension}"
+                # 5. 处理字符串路径
+                elif isinstance(file, str) and os.path.exists(file):
+                    original_filename = os.path.basename(file)
+                    source_file_name = original_filename
+                    file_base_name, file_extension = os.path.splitext(original_filename)
+                    if file_extension:
+                        extension = file_extension
+                        base_name = file_base_name
+                
+                # 生成最终文件名
+                if filename_mode == 'random':
+                    # 使用UUID生成随机文件名
+                    final_filename = f"{uuid.uuid4()}{extension}"
                 else:
-                    filename = f"{base_name}{extension}"
+                    # 使用原始文件名或默认名称
+                    final_filename = f"{base_name}{extension}"
+            else:
+                # 用户指定了文件名
+                final_filename = filename
+                # 确保文件名包含扩展名
+                if '.' not in final_filename:
+                    # 尝试从原始文件获取扩展名
+                    if hasattr(file, 'name') and file.name:
+                        _, file_extension = os.path.splitext(file.name)
+                        if file_extension:
+                            final_filename += file_extension
+                    # 如果无法获取扩展名，使用默认扩展名
+                    else:
+                        final_filename += ".dat"
             
-            # 根据目录模式生成完整的文件路径
-            object_key = self._generate_object_key(directory, directory_mode, filename)
+            # 处理目录路径
+            if directory_mode == 'with_subdirectory' and source_file_name != "unknown":
+                # 使用原始文件名作为子目录
+                file_base_name, _ = os.path.splitext(source_file_name)
+                object_key = f"{directory}/{file_base_name}/{final_filename}"
+            else:
+                # 不使用子目录
+                object_key = f"{directory}/{final_filename}"
             
-            # 获取认证信息
-            credentials = self.runtime.get_credentials() if self.runtime else {}
-            access_key_id = credentials.get('access_key_id')
-            access_key_secret = credentials.get('access_key_secret')
-            bucket = credentials.get('bucket')
-            endpoint = credentials.get('endpoint')
+            # 确保object_key不以/开头
+            object_key = object_key.lstrip('/')
             
-            # 验证认证信息
-            if not access_key_id or not access_key_secret or not bucket or not endpoint:
-                raise ValueError("Missing required credential: access_key_id, access_key_secret, bucket or endpoint")
-            
-            # 创建TOS客户端
-            client = tos.TosClient(
-                ak=access_key_id,
-                sk=access_key_secret,
-                endpoint=endpoint
+            # 初始化TOS客户端
+            enable_verify_ssl = credentials.get('enable_verify_ssl', True)
+            endpoint = credentials['endpoint']
+            region = credentials.get('region')
+            if not region:
+                if '.' in endpoint:
+                    region = endpoint.split('.')[0].replace('tos-', '')
+                else:
+                    region = ''
+            request_timeout = int(parameters.get('request_timeout', 60))
+            client = tos.TosClientV2(
+                ak=credentials['access_key_id'],
+                sk=credentials['access_key_secret'],
+                endpoint=endpoint,
+                region=region,
+                enable_verify_ssl=enable_verify_ssl,
+                request_timeout=request_timeout
             )
             
-            # 上传文件
-            file_size = 0
-            try:
+            # 准备文件内容
+            file_content = None
+            if isinstance(file, File):
                 # 处理dify_plugin的File对象
-                if isinstance(file, File):
-                    file_content = file.blob
-                    file_size = len(file_content)
-                    client.put_object(
-                        bucket=bucket,
-                        key=object_key,
-                        content=file_content
-                    )
-                # 尝试作为普通文件对象处理
-                elif hasattr(file, 'read'):
-                    if hasattr(file, 'seek'):
-                        file.seek(0)
-                    file_content = file.read()
-                    file_size = len(file_content)
-                    client.put_object(
-                        bucket=bucket,
-                        key=object_key,
-                        content=file_content
-                    )
-                # 尝试作为文件路径处理
-                elif isinstance(file, (str, bytes, os.PathLike)) and os.path.exists(file):
-                    file_size = os.path.getsize(file)
-                    client.upload_file(
-                        bucket=bucket,
-                        key=object_key,
-                        file_path=file
-                    )
+                file_content = file.blob
+            elif hasattr(file, 'read'):
+                # 处理文件对象
+                file_content = file.read()
+                # 重置文件指针
+                if hasattr(file, 'seek'):
+                    file.seek(0)
+            elif isinstance(file, str):
+                # 处理文件路径
+                if os.path.exists(file):
+                    with open(file, 'rb') as f:
+                        file_content = f.read()
                 else:
-                    raise ValueError(f"Unsupported file type: {type(file)}")
-            except Exception as e:
-                raise ValueError(f"Failed to upload file: {str(e)}")
+                    raise ValueError(f"File path does not exist: {file}")
+            elif isinstance(file, bytes):
+                # 处理字节数据
+                file_content = file
+            else:
+                raise ValueError("Unsupported file type")
             
-            # 构建文件URL
-            file_url = f"https://{bucket}.{endpoint}/{object_key}"
+            # 获取内容类型
+            _, extension = os.path.splitext(final_filename)
+            content_type = get_content_type_by_extension(extension)
             
-            # 获取文件类型
-            file_type = 'unknown'
-            if extension:
-                file_type = extension[1:].lower()
+            # 上传文件
+            # 上传文件（增加重试与指数退避）
+            max_retries = int(parameters.get('max_retries', 3))
+            last_error = None
+            for attempt in range(1, max_retries + 1):
+                try:
+                    client.put_object(
+                        bucket=credentials['bucket'],
+                        key=object_key,
+                        content=file_content,
+                        content_type=content_type
+                    )
+                    break
+                except Exception as e:
+                    last_error = e
+                    if attempt < max_retries:
+                        time.sleep(min(8.0, 2 ** (attempt - 1)))
+                    else:
+                        raise ValueError(f"Failed to upload file: {str(last_error)}")
             
+            # 构造文件访问URL
+            # 注意：这里需要根据实际的TOS配置来构造URL
+            # 通常格式为: https://{bucket}.{endpoint}/{object_key}
+            # 但有些配置可能需要不同的URL格式
+            file_url = f"https://{credentials['bucket']}.{credentials['endpoint']}/{object_key}"
+            
+            # 返回结果
             return {
-                "status": "success",
-                "file_url": file_url,
-                "filename": filename,
-                "object_key": object_key,
-                "message": "File uploaded successfully",
-                "SourceFileName": source_file_name,
-                "file_size": file_size,
-                "file_type": file_type
+                'filename': final_filename,
+                'object_key': object_key,
+                'file_url': file_url
             }
         except Exception as e:
             raise ValueError(f"Failed to upload file: {str(e)}")
     
-    def _generate_object_key(self, directory: str, directory_mode: str, filename: str) -> str:
-        """根据目录模式生成完整的对象键"""
-        # 确保目录名不以斜杠开头或结尾
-        directory = directory.strip('/')
+    def _generate_object_key(self, directory: str, filename: str, directory_mode: str, source_file_name: str) -> str:
+        """
+        生成对象键
         
-        # 基础路径就是一级目录
-        base_path = directory
+        Args:
+            directory (str): 目录路径
+            filename (str): 文件名
+            directory_mode (str): 目录模式
+            source_file_name (str): 源文件名
         
-        # 根据目录模式添加日期相关的子目录
-        if directory_mode == 'yyyy_mm_dd_hierarchy':
-            now = datetime.now()
-            base_path = os.path.join(directory, str(now.year), f"{now.month:02d}", f"{now.day:02d}")
-        elif directory_mode == 'yyyy_mm_dd_combined':
-            now = datetime.now()
-            base_path = os.path.join(directory, now.strftime('%Y%m%d'))
+        Returns:
+            str: 生成的对象键
+        """
+        if directory_mode == 'with_subdirectory' and source_file_name != "unknown":
+            # 使用原始文件名作为子目录
+            file_base_name, _ = os.path.splitext(source_file_name)
+            object_key = f"{directory}/{file_base_name}/{filename}"
+        else:
+            # 不使用子目录
+            object_key = f"{directory}/{filename}"
         
-        # 组合完整的对象键
-        object_key = os.path.join(base_path, filename)
-        
-        # 将操作系统路径分隔符替换为TOS使用的斜杠
-        return object_key.replace('\\', '/')
-    
-    def _get_extension_from_content_type(self, content_type: str) -> str:
-        """从内容类型推断文件扩展名"""
-        content_type_map = {
-            # 图片格式
-            'image/jpeg': '.jpg',
-            'image/png': '.png',
-            'image/gif': '.gif',
-            'image/bmp': '.bmp',
-            'image/webp': '.webp',
-            'image/svg+xml': '.svg',
-            'image/tiff': '.tiff',
-            'image/x-icon': '.ico',
-            'image/heic': '.heic',
-            
-            # 音频格式
-            'audio/mpeg': '.mp3',
-            'audio/wav': '.wav',
-            'audio/ogg': '.ogg',
-            'audio/flac': '.flac',
-            'audio/aac': '.aac',
-            'audio/m4a': '.m4a',
-            'audio/mp4': '.mp4',
-            
-            # 视频格式
-            'video/mp4': '.mp4',
-            'video/mov': '.mov',
-            'video/avi': '.avi',
-            'video/x-msvideo': '.avi',
-            'video/x-ms-wmv': '.wmv',
-            'video/webm': '.webm',
-            'video/mpeg': '.mpg',
-            
-            # 文档格式
-            'application/pdf': '.pdf',
-            'application/msword': '.doc',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
-            'application/vnd.ms-excel': '.xls',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
-            'application/vnd.ms-powerpoint': '.ppt',
-            'application/vnd.openxmlformats-officedocument.presentationml.presentation': '.pptx',
-            
-            # 文本格式
-            'text/plain': '.txt',
-            'text/csv': '.csv',
-            'application/json': '.json',
-            'application/xml': '.xml',
-            'text/html': '.html',
-            'text/css': '.css',
-            'application/javascript': '.js',
-            'text/markdown': '.md',
-            
-            # 压缩格式
-            'application/zip': '.zip',
-            'application/gzip': '.gz',
-            'application/x-rar-compressed': '.rar',
-            'application/x-7z-compressed': '.7z'
-        }
-        
-        # 直接匹配内容类型
-        if content_type in content_type_map:
-            return content_type_map[content_type]
-        
-        # 尝试匹配内容类型的前缀
-        for ct, ext in content_type_map.items():
-            if content_type.startswith(ct):
-                return ext
-        
-        # 如果没有匹配，返回默认扩展名
-        return '.dat'
+        # 确保object_key不以/开头
+        return object_key.lstrip('/')

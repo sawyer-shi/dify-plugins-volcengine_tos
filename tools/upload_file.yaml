@@ -3,7 +3,7 @@ identity:
   author: "sawyer-shi"
   label:
     en_US: "Upload File to Volcengine TOS"
-    zh_Hans: "上传文件到火山引擎TOS"
+    zh_Hans: "上传文件至火山引擎TOS并返回URL"
     pt_BR: "Enviar arquivo para Volcengine TOS"
 description:
   human:
@@ -95,10 +95,10 @@ parameters:
       zh_Hans: "文件名组成"
       pt_BR: "Modo de Nome do Arquivo"
     human_description:
-      en_US: "The way to compose the filename stored in OSS. 'filename': use the original filename; 'filename_timestamp': use the original filename plus timestamp"
-      zh_Hans: "存储在OSS上的文件名组成方式。'filename'：使用原始文件名；'filename_timestamp'：使用原始文件名加上时间戳"
-      pt_BR: "A forma de compor o nome do arquivo armazenado no OSS. 'filename': usar o nome original do arquivo; 'filename_timestamp': usar o nome original do arquivo mais carimbo de data/hora"
-    llm_description: "The way to compose the filename stored in OSS"
+      en_US: "The way to compose the filename stored in TOS. 'filename': use the original filename; 'filename_timestamp': use the original filename plus timestamp"
+      zh_Hans: "存储在TOS上的文件名组成方式。'filename'：使用原始文件名；'filename_timestamp'：使用原始文件名加上时间戳"
+      pt_BR: "A forma de compor o nome do arquivo armazenado no TOS. 'filename': usar o nome original do arquivo; 'filename_timestamp': usar o nome original do arquivo mais carimbo de data/hora"
+    llm_description: "The way to compose the filename stored in TOS"
     form: llm
     options:
       - label:

@@ -1,13 +1,13 @@
-identity:
+﻿identity:
   author: "sawyer-shi"
   name: "volcengine_tos"
   label:
     en_US: "Volcengine TOS"
-    zh_Hans: "火山引擎TOS"
+    zh_Hans: "火山引擎TOS对象存储"
     pt_BR: "Volcengine TOS"
   description:
     en_US: "Upload and download files from Volcengine TOS."
-    zh_Hans: "从火山引擎TOS上传和下载文件。"
+    zh_Hans: "从火山引擎TOS对象存储上传和下载文件。"
     pt_BR: "Faça upload e download de arquivos do Volcengine TOS."
   icon: "icon.png"
 
@@ -23,7 +23,7 @@ credentials_for_provider:
       pt_BR: "ID da chave de acesso"
     help:
       en_US: "The Access Key ID for authentication"
-      zh_Hans: "用于认证的访问密钥 ID"
+      zh_Hans: "用于认证的访问密钥ID"
       pt_BR: "O ID da chave de acesso para autenticação"
     placeholder:
       en_US: "Your Access Key ID"
@@ -34,11 +34,11 @@ credentials_for_provider:
   access_key_secret:
     label:
       en_US: "Access Key Secret"
-      zh_Hans: "访问密钥密钥"
+      zh_Hans: "访问密钥 Secret"
       pt_BR: "Segredo da chave de acesso"
     help:
       en_US: "The Access Key Secret for authentication"
-      zh_Hans: "用于认证的访问密钥密钥"
+      zh_Hans: "用于认证的访问密钥Secret"
       pt_BR: "O segredo da chave de acesso para autenticação"
     placeholder:
       en_US: "Your Access Key Secret"
@@ -49,7 +49,7 @@ credentials_for_provider:
   endpoint:
     label:
       en_US: "TOS Endpoint"
-      zh_Hans: "TOS 节点"
+      zh_Hans: "TOS 终端节点"
       pt_BR: "Endpoint do TOS"
     help:
       en_US: "TOS endpoint, e.g. tos-cn-beijing.volces.com (no protocol)"
@@ -80,3 +80,4 @@ credentials_for_provider:
 extra:
   python:
     source: "provider/volcengine_tos.py"
+

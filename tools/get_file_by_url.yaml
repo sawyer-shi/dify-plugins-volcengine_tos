@@ -27,6 +27,16 @@ parameters:
       pt_BR: "A URL do arquivo para download"
     llm_description: "The URL of the file to download from Volcengine TOS"
     form: llm
+outputs:
+  - name: files
+    type: array
+    items:
+      type: object
+      properties:
+        file_id: string
+        file_name: string
+        file_size: integer
+        mime_type: string
 extra:
   python:
     source: tools/get_file_by_url.py
