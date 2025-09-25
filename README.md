@@ -220,7 +220,17 @@ pip install -r requirements.txt
 
 ### 示例
 
-（保留现有图片）
+#### 上传文件
+<img width="2138" height="572" alt="upload-01" src="https://github.com/user-attachments/assets/c370b682-612e-47ad-b8f8-9efe9b8edfc1" />
+<img width="2155" height="596" alt="upload-02" src="https://github.com/user-attachments/assets/a37bef6e-c3a5-4a30-8b22-3c3ecab7ae08" />
+
+
+
+
+
+#### 下载文件
+<img width="2264" height="769" alt="download-01" src="https://github.com/user-attachments/assets/6914b220-9ebb-4fb2-8fb8-c07fbd9473b0" />
+<img width="2164" height="627" alt="download-02" src="https://github.com/user-attachments/assets/97864b3b-ed7d-4648-9654-09852aa5b709" />
 
 ### 备注
 
