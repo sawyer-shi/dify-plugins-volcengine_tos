@@ -184,13 +184,24 @@ class UploadFileTool(Tool):
                         final_filename += ".dat"
             
             # 处理目录路径
-            if directory_mode == 'with_subdirectory' and source_file_name != "unknown":
-                # 使用原始文件名作为子目录
-                file_base_name, _ = os.path.splitext(source_file_name)
-                object_key = f"{directory}/{file_base_name}/{final_filename}"
-            else:
-                # 不使用子目录
-                object_key = f"{directory}/{final_filename}"
+            current_date = datetime.now()
+            date_path = ''
+            if directory_mode == 'yyyy_mm_dd_hierarchy':
+                date_path = f"{current_date.year}/{current_date.month:02d}/{current_date.day:02d}/"
+            elif directory_mode == 'yyyy_mm_dd_combined':
+                date_path = f"{current_date.year}{current_date.month:02d}{current_date.day:02d}/"
+            
+            # 生成带日期路径的完整目录
+            full_directory = f"{directory}/{date_path}" if date_path else directory
+            
+            # 处理文件名模式
+            if filename_mode == 'filename_timestamp':
+                timestamp = current_date.strftime('%Y%m%d%H%M%S%f')[:-3]  # 保留毫秒
+                file_base, file_ext = os.path.splitext(final_filename)
+                final_filename = f"{file_base}_{timestamp}{file_ext}"
+            
+            # 生成对象键
+            object_key = f"{full_directory}/{final_filename}" if full_directory else final_filename
             
             # 确保object_key不以/开头
             object_key = object_key.lstrip('/')
@@ -276,27 +287,3 @@ class UploadFileTool(Tool):
             }
         except Exception as e:
             raise ValueError(f"Failed to upload file: {str(e)}")
-    
-    def _generate_object_key(self, directory: str, filename: str, directory_mode: str, source_file_name: str) -> str:
-        """
-        生成对象键
-        
-        Args:
-            directory (str): 目录路径
-            filename (str): 文件名
-            directory_mode (str): 目录模式
-            source_file_name (str): 源文件名
-        
-        Returns:
-            str: 生成的对象键
-        """
-        if directory_mode == 'with_subdirectory' and source_file_name != "unknown":
-            # 使用原始文件名作为子目录
-            file_base_name, _ = os.path.splitext(source_file_name)
-            object_key = f"{directory}/{file_base_name}/{filename}"
-        else:
-            # 不使用子目录
-            object_key = f"{directory}/{filename}"
-        
-        # 确保object_key不以/开头
-        return object_key.lstrip('/')
