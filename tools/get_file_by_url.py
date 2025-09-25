@@ -17,6 +17,7 @@ from tos.auth import CredentialProviderAuth, StaticCredentialsProvider
 
 # 禁用SSL验证警告
 import urllib3
+from urllib.parse import unquote_plus
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # 取消 requests 默认对 urllib3 的 pyOpenSSL 注入，避免 SSLContext.minimum_version 递归
@@ -212,7 +213,7 @@ class GetFileByUrlTool(Tool):
             filename = parameters.get('filename')
             if not filename:
                 # 从object_key中提取文件名
-                filename = os.path.basename(object_key)
+                filename = os.path.basename(unquote_plus(object_key))
                 if not filename:
                     filename = "download"
             
@@ -243,7 +244,7 @@ class GetFileByUrlTool(Tool):
                 "filename": filename,
                 "file_type": file_type,
                 "file_size": round(file_size_mb, 2),
-                "object_key": object_key,
+                "object_key": unquote_plus(object_key),
                 "content_type": content_type,
                 "file_size_bytes": file_size
             }
