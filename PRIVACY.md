@@ -2,9 +2,56 @@
 
 **Effective Date / 生效日期**: September 22, 2025 / 2025年09月22日
 **Version / 版本**: v0.0.1
-**Plugin Name / 插件名称**: Volcengine TOS Object Storage / 火山引擎TOS对象存储
+**Plugin Name / 插件名称**: Volcengine Torch Object Storage (TOS) / 火山引擎TOS对象存储
 
 --- 
+
+## English Version
+
+### Overview
+
+This plugin ("Plugin") enables interaction with Volcengine Torch Object Storage (TOS) within the Dify platform, supporting file uploads and downloads with user privacy and data security as primary principles. This document explains how we handle your data when you use the Plugin.
+
+### Data Collection
+
+**We do NOT collect:**
+- Personal identification information
+- User account details
+- Usage analytics or tracking data
+- Device information
+- Location information
+- Cookies or similar tracking technologies
+
+**We process:**
+- File content you choose to upload to Volcengine TOS
+- File metadata (e.g., filename, content type) for upload/download operations
+- Temporary processing data required for file operations
+
+### Data Processing
+
+**Secure Transmission:**
+- File transfers between Dify platform and Volcengine TOS use encrypted connections
+- Authentication credentials are securely managed through the Dify platform
+- We do not store or record your Volcengine TOS credentials
+
+### Data Storage
+
+**Cloud Storage:**
+- Files you upload are stored in your own Volcengine TOS bucket
+- We do not keep copies of your files
+- We do not access or view your file contents
+- File retention and deletion are determined by your Volcengine TOS configuration
+
+### Contact Information
+
+**Developer:** `https://github.com/sawyer-shi`
+**Email:** sawyer36@foxmail.com
+**Source Code:** `https://github.com/sawyer-shi/dify-plugins-volcengine_tos`
+**Support:** Provided through Dify platform and GitHub Issues
+
+**Last Updated:** September 22, 2025
+
+---
 
 ## 中文版本
 
@@ -46,7 +93,7 @@
 
 **开发者：** `https://github.com/sawyer-shi`
 **邮箱：** sawyer36@foxmail.com
-**源码：** 通过 Dify 平台获取
+**源码：** `https://github.com/sawyer-shi/dify-plugins-volcengine_tos`
 **支持：** 通过 Dify 平台与 GitHub Issues 提供
 
 ---

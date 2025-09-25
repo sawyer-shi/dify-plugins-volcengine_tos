@@ -6,7 +6,7 @@
 
 ## English
 
-A powerful Dify plugin providing seamless integration with Volcengine Object Storage Service (TOS). Enables direct file uploads to Volcengine TOS and efficient file retrieval using URLs, with rich configuration options.
+A powerful Dify plugin providing seamless integration with Volcengine Torch Object Storage (TOS). Enables direct file uploads to Volcengine TOS and efficient file retrieval using URLs, with rich configuration options.
 
 ### Version Information
 
@@ -14,6 +14,11 @@ A powerful Dify plugin providing seamless integration with Volcengine Object Sto
 - **Release Date**: 2025-09-22
 - **Compatibility**: Dify Plugin Framework
 - **Python Version**: 3.12
+
+### Quick Start
+1. Download the `volcengine_tos` plugin from the Dify Marketplace.
+2. Configure your Volcengine TOS authorization information.
+3. After completing the above configuration, you can start using the plugin immediately.
 
 #### Version History
 - **v0.0.1** (2025-09-22): Initial release with file upload and retrieval capabilities, support for multiple directory structures and filename modes
@@ -94,17 +99,13 @@ Dedicated tool for retrieving files from Volcengine TOS using URLs.
 ### Examples
 
 #### Upload File
-<img width="2194" height="611" alt="upload-01" src="https://github.com/user-attachments/assets/acb73086-c647-4a52-95b7-521531e7c0bc" />
-<img width="2168" height="814" alt="upload-02" src="https://github.com/user-attachments/assets/e4e84e00-31ce-401d-a5a3-aaf953072907" />
-<img width="2389" height="994" alt="upload-03" src="https://github.com/user-attachments/assets/af3525c9-87b6-44a4-8d99-4b4a9d5db5f5" />
+
 
 
 
 
 #### Get File by URL
-<img width="2350" height="484" alt="download-01" src="https://github.com/user-attachments/assets/86d544a6-ec2d-48d6-9e4e-a25bec19b32f" />
-<img width="1948" height="630" alt="download-02" src="https://github.com/user-attachments/assets/21669d01-d9d3-4c3c-aada-dab597da521f" />
-<img width="2195" height="545" alt="download-03" src="https://github.com/user-attachments/assets/0a5e8144-990b-4d0e-a342-41ce4e996e3f" />
+
 
 
 
@@ -118,6 +119,7 @@ Dedicated tool for retrieving files from Volcengine TOS using URLs.
 ### Developer Information
 
 - **Author**: `https://github.com/sawyer-shi`
+- **Source Code**: `https://github.com/sawyer-shi/dify-plugins-volcengine_tos`
 - **Email**: sawyer36@foxmail.com
 - **License**: MIT License
 - **Support**: Through Dify platform and GitHub Issues
@@ -134,6 +136,11 @@ Dedicated tool for retrieving files from Volcengine TOS using URLs.
 - 发布日期：2025-09-22
 - 兼容性：Dify 插件框架
 - Python 版本：3.12
+
+### 快速开始
+1. 从 Dify 市场下载 `volcengine_tos` 插件。
+2. 配置 Volcengine TOS 的授权信息。
+3. 完成上述配置就能马上使用该插件了。
 
 #### 版本历史
 - v0.0.1（2025-09-22）：首个版本，包含文件上传与下载能力，支持多种目录结构与文件名模式
@@ -220,13 +227,14 @@ pip install -r requirements.txt
 ### 开发者信息
 
 - 作者：https://github.com/sawyer-shi
+- 源码：`https://github.com/sawyer-shi/dify-plugins-volcengine_tos`
 - 邮箱：sawyer36@foxmail.com
 - 许可协议：MIT License
 - 支持：通过 Dify 平台与 GitHub Issues
 
 ---
 
-**Ready to seamlessly integrate with Volcengine TOS? / 鍑嗗濂戒笌鐏北寮曟搸TOS鏃犵紳闆嗘垚浜嗗悧锛?*
+**Ready to seamlessly integrate with Volcengine TOS? / 准备好与火山引擎TOS无缝集成了吗？**
 
 
 
