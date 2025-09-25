@@ -27,7 +27,7 @@ class UploadFileTool(Tool):
             # 在text中输出成功信息，包含文件类型、大小（M单位）和访问链接
             file = tool_parameters.get('file')
             file_size = 0
-            file_type = 'unknown'
+            file_type = result.get('content_type', 'unknown')
             
             # 尝试获取文件大小
             if isinstance(file, File) and hasattr(file, 'blob'):
@@ -292,7 +292,8 @@ class UploadFileTool(Tool):
             return {
                 'filename': final_filename,
                 'object_key': object_key,
-                'file_url': file_url
+                'file_url': file_url,
+                'content_type': content_type
             }
         except Exception as e:
             raise ValueError(f"Failed to upload file: {str(e)}")
