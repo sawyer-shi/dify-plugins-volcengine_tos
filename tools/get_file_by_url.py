@@ -81,12 +81,11 @@ try:
 except Exception:
     pass
 
-# 调试：验证补丁是否生效
+# 调试：验证补丁是否生效（已移除调试输出）
 try:
     import inspect as _inspect
     _util_is_safe = _urllib3_ssl.create_urllib3_context is _safe_create_urllib3_context
     _conn_is_safe = getattr(_urllib3_conn, "create_urllib3_context", None) is _safe_create_urllib3_context
-    print(f"[SSL-PATCH] util_is_safe={_util_is_safe}, conn_is_safe={_conn_is_safe}")
 except Exception:
     pass
 
