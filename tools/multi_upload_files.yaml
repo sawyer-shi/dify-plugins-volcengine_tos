@@ -1,0 +1,103 @@
+identity:
+  name: "multi_upload_files"
+  author: "sawyer-shi"
+  label:
+    en_US: "Upload Multiple Files to Volcengine TOS"
+    zh_Hans: "批量上传文件至火山引擎TOS并返回URL"
+    pt_BR: "Enviar múltiplos arquivos para Volcengine TOS"
+description:
+  human:
+    en_US: "Upload multiple files to Volcengine TOS and get the URLs"
+    zh_Hans: "批量上传文件至火山引擎TOS并返回URL"
+    pt_BR: "Faça upload de múltiplos arquivos para o Volcengine TOS e obtenha as URLs"
+  llm: "This tool allows users to upload multiple files to Volcengine TOS and get the URLs. Provide files and configuration parameters."
+parameters:
+  
+  # 上传相关参数
+  - name: files
+    type: files
+    required: true
+    label:
+      en_US: "Files"
+      zh_Hans: "文件"
+      pt_BR: "Arquivos"
+    human_description:
+      en_US: "The files to upload (maximum 10 files)"
+      zh_Hans: "要上传的文件（最多10个文件）"
+      pt_BR: "Os arquivos a serem carregados (máximo de 10 arquivos)"
+    llm_description: "The file objects to be uploaded to Volcengine TOS (maximum 10 files)"
+    form: llm
+  
+  - name: directory
+    type: string
+    required: true
+    label:
+      en_US: "Directory"
+      zh_Hans: "目录"
+      pt_BR: "Diretório"
+    human_description:
+      en_US: "The directory in the bucket where the files will be stored"
+      zh_Hans: "文件将存储在存储桶中的目录路径"
+      pt_BR: "O diretório no bucket onde os arquivos serão armazenados"
+    llm_description: "Optional directory path within the bucket to store the uploaded files"
+    form: llm
+  
+  - name: directory_mode
+    type: select
+    required: false
+    label:
+      en_US: "Directory Mode"
+      zh_Hans: "目录模式"
+      pt_BR: "Modo de diretório"
+    human_description:
+      en_US: "How to organize files in directories"
+      zh_Hans: "如何在目录中组织文件"
+      pt_BR: "Como organizar arquivos em diretórios"
+    llm_description: "Specify how to organize files in directories. 'no_subdirectory' for no subdirectories, 'yyyy_mm_dd_combined' for a single date directory, 'yyyy_mm_dd_hierarchy' for nested date directories"
+    form: llm
+    options:
+      - label:
+          en_US: "No subdirectory"
+          zh_Hans: "无子目录"
+          pt_BR: "Sem subdiretório"
+        value: "no_subdirectory"
+      - label:
+          en_US: "Date combined"
+          zh_Hans: "日期一体"
+          pt_BR: "Data combinada"
+        value: "yyyy_mm_dd_combined"
+      - label:
+          en_US: "Date hierarchy"
+          zh_Hans: "日期层级"
+          pt_BR: "Hierarquia de datas"
+        value: "yyyy_mm_dd_hierarchy"
+    default: "no_subdirectory"
+  
+  - name: filename_mode
+    type: select
+    required: false
+    label:
+      en_US: "Filename Mode"
+      zh_Hans: "文件名组成"
+      pt_BR: "Modo de Nome do Arquivo"
+    human_description:
+      en_US: "The way to compose the filename stored in TOS. 'filename': use the original filename; 'filename_timestamp': use the original filename plus timestamp"
+      zh_Hans: "存储在TOS上的文件名组成方式。'filename'：使用原始文件名；'filename_timestamp'：使用原始文件名加上时间戳"
+      pt_BR: "A forma de compor o nome do arquivo armazenado no TOS. 'filename': usar o nome original do arquivo; 'filename_timestamp': usar o nome original do arquivo mais carimbo de data/hora"
+    llm_description: "The way to compose the filename stored in TOS"
+    form: llm
+    options:
+      - label:
+          en_US: "Filename"
+          zh_Hans: "纯文件名"
+          pt_BR: "Nome do Arquivo"
+        value: "filename"
+      - label:
+          en_US: "Filename + Timestamp"
+          zh_Hans: "文件名+时间戳数字"
+          pt_BR: "Nome do Arquivo + Carimbo de Data/Hora"
+        value: "filename_timestamp"
+    default: "filename"
+extra:
+  python:
+    source: tools/multi_upload_files.py
