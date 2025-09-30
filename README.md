@@ -99,16 +99,18 @@ Dedicated tool for retrieving files from Volcengine TOS using URLs.
 ### Examples
 
 #### Upload File
-<img width="2138" height="572" alt="upload-01" src="https://github.com/user-attachments/assets/c370b682-612e-47ad-b8f8-9efe9b8edfc1" />
-<img width="2155" height="596" alt="upload-02" src="https://github.com/user-attachments/assets/a37bef6e-c3a5-4a30-8b22-3c3ecab7ae08" />
+<img width="2066" height="1034" alt="upload-01" src="https://github.com/user-attachments/assets/36efab38-aaca-4a51-938c-26daa791f4a0" />
 
 
-
+#### Batch Upload Files
+<img width="2040" height="736" alt="upload-02" src="https://github.com/user-attachments/assets/178410d5-bfc4-4b9a-83ac-1c7a12159323" />
 
 
 #### Get File by URL
-<img width="2264" height="769" alt="download-01" src="https://github.com/user-attachments/assets/6914b220-9ebb-4fb2-8fb8-c07fbd9473b0" />
-<img width="2164" height="627" alt="download-02" src="https://github.com/user-attachments/assets/97864b3b-ed7d-4648-9654-09852aa5b709" />
+<img width="2231" height="645" alt="download-01" src="https://github.com/user-attachments/assets/1bd2c648-a30b-45a3-9fed-d0ed362390b6" />
+<img width="2131" height="564" alt="download-02" src="https://github.com/user-attachments/assets/9ebcdd32-efde-4908-b702-9eccfee66d44" />
+
+
 
 
 
@@ -221,16 +223,17 @@ pip install -r requirements.txt
 ### 示例
 
 #### 上传文件
-<img width="2138" height="572" alt="upload-01" src="https://github.com/user-attachments/assets/c370b682-612e-47ad-b8f8-9efe9b8edfc1" />
-<img width="2155" height="596" alt="upload-02" src="https://github.com/user-attachments/assets/a37bef6e-c3a5-4a30-8b22-3c3ecab7ae08" />
+<img width="2066" height="1034" alt="upload-01" src="https://github.com/user-attachments/assets/36efab38-aaca-4a51-938c-26daa791f4a0" />
 
 
+#### 批量上传文件
+<img width="2040" height="736" alt="upload-02" src="https://github.com/user-attachments/assets/178410d5-bfc4-4b9a-83ac-1c7a12159323" />
 
 
+#### 获取(下载)文件
+<img width="2231" height="645" alt="download-01" src="https://github.com/user-attachments/assets/1bd2c648-a30b-45a3-9fed-d0ed362390b6" />
+<img width="2131" height="564" alt="download-02" src="https://github.com/user-attachments/assets/9ebcdd32-efde-4908-b702-9eccfee66d44" />
 
-#### 下载文件
-<img width="2264" height="769" alt="download-01" src="https://github.com/user-attachments/assets/6914b220-9ebb-4fb2-8fb8-c07fbd9473b0" />
-<img width="2164" height="627" alt="download-02" src="https://github.com/user-attachments/assets/97864b3b-ed7d-4648-9654-09852aa5b709" />
 
 ### 备注
 
