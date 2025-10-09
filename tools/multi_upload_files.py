@@ -126,12 +126,18 @@ class MultiUploadFilesTool(Tool):
             current_date = datetime.now()
             date_path = ''
             if directory_mode == 'yyyy_mm_dd_hierarchy':
-                date_path = f"{current_date.year}/{current_date.month:02d}/{current_date.day:02d}/"
+                date_path = f"{current_date.year}/{current_date.month:02d}/{current_date.day:02d}"
             elif directory_mode == 'yyyy_mm_dd_combined':
-                date_path = f"{current_date.year}{current_date.month:02d}{current_date.day:02d}/"
+                date_path = f"{current_date.year}{current_date.month:02d}{current_date.day:02d}"
             
             # 生成带日期路径的完整目录
-            full_directory = f"{directory}/{date_path}" if date_path else directory
+            if date_path:
+                if directory:
+                    full_directory = f"{directory}/{date_path}"
+                else:
+                    full_directory = date_path
+            else:
+                full_directory = directory
             
             # 上传每个文件
             uploaded_files = []
