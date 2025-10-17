@@ -24,48 +24,31 @@ class UploadFileTool(Tool):
             
             yield self.create_json_message(result)
             
-            # 在text中输出成功信息，包含文件类型、大小（M单位）和访问链接
-            file = tool_parameters.get('file')
-            file_size = 0
-            file_type = result.get('content_type', 'unknown')
+            # 生成详细的文本消息
+            success_count = result.get('success_count', 0)
+            error_count = result.get('error_count', 0)
             
-            # 尝试获取文件大小
-            if isinstance(file, File) and hasattr(file, 'blob'):
-                file_size = len(file.blob)
-            elif hasattr(file, 'read'):
-                # 保存当前文件指针位置
-                if hasattr(file, 'tell'):
-                    current_pos = file.tell()
-                else:
-                    current_pos = None
-                
-                # 读取文件内容获取大小
-                content = file.read()
-                file_size = len(content)
-                
-                # 重置文件指针
-                if hasattr(file, 'seek') and current_pos is not None:
-                    file.seek(current_pos)
-            elif isinstance(file, (str, bytes, os.PathLike)) and os.path.exists(file):
-                file_size = os.path.getsize(file)
-                
-            # 尝试获取文件类型
-            if hasattr(file, 'name'):
-                _, extension = os.path.splitext(file.name)
-                if extension:
-                    file_type = extension.lower()[1:]  # 移除点号
+            # 格式化文本消息
+            text_message = f"File upload completed\n"
+            text_message += f"Success: {success_count} file\n"
+            text_message += f"Failed: {error_count} file\n\n"
             
-            # 转换文件大小为MB
-            file_size_mb = file_size / (1024 * 1024) if file_size > 0 else 0
+            if success_count > 0:
+                text_message += "Successful files:\n"
+                for file_info in result.get('files', []):
+                    if file_info.get('status') == 'success':
+                        filename = file_info.get('filename', 'unknown')
+                        file_size_mb = file_info.get('file_size_mb', 0)
+                        file_size_bytes = file_info.get('file_size_bytes', 0)
+                        file_type = file_info.get('file_type', 'unknown')
+                        file_url = file_info.get('file_url', '')
+                        
+                        text_message += f"- File name: {filename}\n"
+                        text_message += f"  File size: {file_size_mb:.2f} MB ({file_size_bytes} bytes)\n"
+                        text_message += f"  File type: {file_type}\n"
+                        text_message += f"  File URL: {file_url}\n\n"
             
-            # 使用单独的字符串格式化 - 英文消息
-            success_message = "File uploaded successfully!\n"
-            success_message += f"Filename: {result['filename']}\n"
-            success_message += f"File type: {file_type}\n"
-            success_message += f"File size: {file_size_mb:.2f} MB\n"
-            success_message += f"Access URL: {result['file_url']}\n"
-            success_message += f"Object key: {result['object_key']}"
-            yield self.create_text_message(success_message)
+            yield self.create_text_message(text_message)
         except Exception as e:
             # 在text中输出失败信息 - 英文消息
             yield self.create_text_message(f"Failed to upload file: {str(e)}")
@@ -240,66 +223,101 @@ class UploadFileTool(Tool):
                 request_timeout=request_timeout
             )
             
-            # 准备文件内容
+            # 准备文件内容和计算文件大小
             file_content = None
-            if isinstance(file, File):
-                # 处理dify_plugin的File对象
-                file_content = file.blob
-            elif hasattr(file, 'read'):
-                # 处理文件对象
-                file_content = file.read()
-                # 重置文件指针
-                if hasattr(file, 'seek'):
-                    file.seek(0)
-            elif isinstance(file, str):
-                # 处理文件路径
-                if os.path.exists(file):
-                    with open(file, 'rb') as f:
-                        file_content = f.read()
-                else:
-                    raise ValueError(f"File path does not exist: {file}")
-            elif isinstance(file, bytes):
-                # 处理字节数据
-                file_content = file
-            else:
-                raise ValueError("Unsupported file type")
+            file_size_bytes = 0
             
-            # 获取内容类型
-            _, extension = os.path.splitext(final_filename)
-            content_type = get_content_type_by_extension(extension)
-            
-            # 上传文件
-            # 上传文件（增加重试与指数退避）
-            max_retries = int(parameters.get('max_retries', 3))
-            last_error = None
-            for attempt in range(1, max_retries + 1):
-                try:
-                    client.put_object(
-                        bucket=credentials['bucket'],
-                        key=object_key,
-                        content=file_content,
-                        content_type=content_type
-                    )
-                    break
-                except Exception as e:
-                    last_error = e
-                    if attempt < max_retries:
-                        time.sleep(min(8.0, 2 ** (attempt - 1)))
+            try:
+                if isinstance(file, File):
+                    # 处理dify_plugin的File对象
+                    file_content = file.blob
+                    file_size_bytes = len(file.blob)
+                elif hasattr(file, 'read'):
+                    # 处理文件对象
+                    file_content = file.read()
+                    file_size_bytes = len(file_content)
+                    # 重置文件指针
+                    if hasattr(file, 'seek'):
+                        file.seek(0)
+                elif isinstance(file, str):
+                    # 处理文件路径
+                    if os.path.exists(file):
+                        file_size_bytes = os.path.getsize(file)
+                        with open(file, 'rb') as f:
+                            file_content = f.read()
                     else:
-                        raise ValueError(f"Failed to upload file: {str(last_error)}")
-            
-            # 构造文件访问URL
-            # 注意：这里需要根据实际的TOS配置来构造URL
-            # 通常格式为: https://{bucket}.{endpoint}/{object_key}
-            # 但有些配置可能需要不同的URL格式
-            file_url = f"https://{credentials['bucket']}.{credentials['endpoint']}/{object_key}"
-            
-            # 返回结果
-            return {
-                'filename': final_filename,
-                'object_key': object_key,
-                'file_url': file_url,
-                'content_type': content_type
-            }
+                        raise ValueError(f"File path does not exist: {file}")
+                elif isinstance(file, bytes):
+                    # 处理字节数据
+                    file_content = file
+                    file_size_bytes = len(file)
+                else:
+                    raise ValueError("Unsupported file type")
+                
+                # 获取内容类型
+                _, extension = os.path.splitext(final_filename)
+                content_type = get_content_type_by_extension(extension)
+                
+                # 上传文件（增加重试与指数退避）
+                max_retries = int(parameters.get('max_retries', 3))
+                last_error = None
+                for attempt in range(1, max_retries + 1):
+                    try:
+                        client.put_object(
+                            bucket=credentials['bucket'],
+                            key=object_key,
+                            content=file_content,
+                            content_type=content_type
+                        )
+                        break
+                    except Exception as e:
+                        last_error = e
+                        if attempt < max_retries:
+                            time.sleep(min(8.0, 2 ** (attempt - 1)))
+                        else:
+                            raise ValueError(f"Failed to upload file: {str(last_error)}")
+                
+                # 构造文件访问URL
+                file_url = f"https://{credentials['bucket']}.{credentials['endpoint']}/{object_key}"
+                
+                # 计算文件大小（MB）
+                file_size_mb = file_size_bytes / (1024 * 1024) if file_size_bytes > 0 else 0
+                
+                # 获取文件类型（不带点）
+                file_type = extension.lstrip('.') if extension else 'unknown'
+                
+                # 构建文件信息
+                file_info = {
+                    'filename': final_filename,
+                    'object_key': object_key,
+                    'file_url': file_url,
+                    'content_type': content_type,
+                    'file_size_bytes': file_size_bytes,
+                    'file_size_mb': round(file_size_mb, 2),
+                    'file_type': file_type,
+                    'status': 'success'
+                }
+                
+                # 返回结果
+                return {
+                    'status': 'completed',
+                    'success_count': 1,
+                    'error_count': 0,
+                    'files': [file_info]
+                }
+            except Exception as e:
+                # 返回失败结果
+                file_info = {
+                    'filename': final_filename or 'unknown',
+                    'error': str(e),
+                    'status': 'failed'
+                }
+                
+                return {
+                    'status': 'completed',
+                    'success_count': 0,
+                    'error_count': 1,
+                    'files': [file_info]
+                }
         except Exception as e:
             raise ValueError(f"Failed to upload file: {str(e)}")
